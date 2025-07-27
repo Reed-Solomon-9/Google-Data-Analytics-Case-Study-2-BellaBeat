@@ -526,19 +526,70 @@ HAVING SUM(total_intensity_hour) IS NOT NULL
 
 ORDER BY user_id
 
---create tables for heartrate
-DROP TABLE IF EXISTS HeartrateBySecondBellaBeat;
-CREATE TABLE HeartrateBySecondBellaBeat (
+--**Create tables for heartrate**
+--table for March-April
+DROP TABLE IF EXISTS HeartrateBySecondBellaBeat1;
+CREATE TABLE HeartrateBySecondBellaBeat1 (
 user_id VARCHAR(50),
 time TIMESTAMP,
 heartrate NUMERIC(50)
 );
 
-COPY HeartrateBySecondBellaBeat FROM '/Users/reedw.solomon/Data_Folder/Google BellaBeat analysis/heartrate_seconds_3_4.csv' DELIMITER ',' CSV HEADER;
+COPY HeartrateBySecondBellaBeat1 FROM '/Users/reedw.solomon/Data_Folder/Google BellaBeat analysis/heartrate_seconds_3_4.csv' DELIMITER ',' CSV HEADER;
 --check
 SELECT *
-FROM HeartrateBySecondBellaBeat
+FROM HeartrateBySecondBellaBeat1
 LIMIT 100
+-- number of rows
+SELECT COUNT(*)
+FROM HeartrateBySecondBellaBeat1
+--latest time for each user
+SELECT 
+	user_id,
+	MAX(time) AS latest_time
+
+FROM HeartrateBySecondBellaBeat
+
+GROUP BY user_id
+
+--table for April-May
+DROP TABLE IF EXISTS HeartrateBySecondBellaBeat2;
+CREATE TABLE HeartrateBySecondBellaBeat2 (
+user_id VARCHAR(50),
+time TIMESTAMP,
+heartrate NUMERIC(50)
+);
+
+COPY HeartrateBySecondBellaBeat2 FROM '/Users/reedw.solomon/Data_Folder/Google BellaBeat analysis/heartrate_seconds_4_5.csv' DELIMITER ',' CSV HEADER;
+--check
+SELECT *
+FROM HeartrateBySecondBellaBeat2
+LIMIT 100
+--number of rows
+SELECT COUNT(*)
+FROM HeartrateBySecondBellaBeat2
+--earliest time for each user
+SELECT
+	user_id,
+	MIN(time) AS earliest_time
+
+FROM HeartrateBySecondBellaBeat2
+
+GROUP BY user_id
+
+--combine tables, remove overlapping entries, count rows to determine how many were removed
+DROP TABLE IF EXISTS HeartrateBySecondBellaBeat;
+CREATE TABLE HeartrateBySecondBellaBeat AS(
+SELECT *
+FROM HeartrateBySecondBellaBeat1
+UNION
+SELECT *
+FROM HeartrateBySecondBellaBeat2
+);
+SELECT COUNT(*)
+
+FROM HeartrateBySecondBellaBeat
+
 
 --explore heartrate data. create columns to better organize before transforming into an hourly table.
 WITH MaxIncluded AS (
@@ -627,6 +678,8 @@ ORDER BY user_id;
 SELECT *
 
 FROM HeartrateByHourBellaBeat
+
+ORDER BY hour
 
 --**Query for combined table**
 
